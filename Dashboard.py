@@ -36,14 +36,6 @@ fig_grouped_bar = px.bar(df, x='Category', y='Sales', color='Region', barmode='g
                           title='Grouped Barplot: Sales by Category and Region')
 st.plotly_chart(fig_grouped_bar, use_container_width=True)
 
-
-fig_line_chart_subcategory = px.line(df, x='Ship Date', y='Sales', color='Category',
-                                     title='Line Chart: Sales Over Ship Date by Category')
-st.plotly_chart(fig_line_chart_subcategory, use_container_width=True)
-
-
-
-
 st.sidebar.header("Choose your filter: ")
 # Create for Region
 region = st.sidebar.multiselect("Pick your Region", df["Region"].unique())
@@ -108,7 +100,7 @@ with cl1:
 
 with cl2:
     with st.expander("Region_ViewData"):
-        region = filtered_df.groupby(by = "Region", as_index = False)[["Sales", "Quantity","Profit"]].sum()
+        region = filtered_df.groupby(by = "Region", as_index = False)[["Sales", "Quantity","Profit","Shipping Cost","Discount"]].sum()
         st.write(region.style.background_gradient(cmap="Oranges"))
         csv = region.to_csv(index = False).encode('utf-8')
         
@@ -194,15 +186,17 @@ st.plotly_chart(fig_plotly)
 
 
 # Create Box and Whisker Plot 
-st.subheader("Box and Whisker Plot: Market vs. Sales")
-fig = px.box(df, x='Market', y='Sales', color='Market', title="Market vs. Sales",
+with col1:
+    st.subheader("Box and Whisker Plot: Market vs. Sales")
+    fig = px.box(df, x='Market', y='Sales', color='Market', title="Market vs. Sales",
              labels={"Market": "Market", "Sales": "Sales"})
-fig.update_layout(
+    fig.update_layout(
     xaxis=dict(title=dict(text="Market", font=dict(size=14))),
     yaxis=dict(title=dict(text="Sales", font=dict(size=14))),
     font=dict(size=10)
-)
-st.plotly_chart(fig)
+    )
+    st.plotly_chart(fig)
+
 
 # Create Bubble Plot
 st.subheader(":chart_with_upwards_trend: Bubble Plot Analysis")
@@ -232,47 +226,52 @@ fig = px.sunburst(df, path=['Region', 'Country', 'State', 'City'], values='Sales
                   title='Sunburst Chart: Sales by Region, Country, State, and City')
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=40))
 st.plotly_chart(fig, use_container_width=True)
-fig = px.choropleth(df, 
+
+#Map Plot
+with col2:
+    fig = px.choropleth(df, 
                     locations='Country',  # Column containing country names
                     locationmode='country names',  # Set the location mode
                     color='Sales',  # Column containing the color values
                     hover_name='Country',  # Column containing hover information
-                    title='Choropleth Map: Sales by Country',
+                    title='Map: Sales by Country',
                     color_continuous_scale='Viridis'  # Set the color scale
                     )
-st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True)
 
 
 # Violin Plot: Sales by Category
-st.subheader('Violin Plot: Sales by Category')
-plt.figure(figsize=(10, 6))
-ax = sns.violinplot(x='Category', y='Sales', data=df, palette='viridis')
-quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
-for category in df['Category'].unique():
-    q25, q50, q75 = quartiles.loc[category]
+with col1:
+    st.subheader('Violin Plot: Sales by Category')
+    plt.figure(figsize=(10, 6))
+    ax = sns.violinplot(x='Category', y='Sales', data=df, palette='viridis')
+    quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
+    for category in df['Category'].unique():
+        q25, q50, q75 = quartiles.loc[category]
     ax.text(category, q25, f'Q1\n{q25:.2f}', ha='center', va='center', fontdict={'size': 8})
     ax.text(category, q50, f'Q2\n{q50:.2f}', ha='center', va='center', fontdict={'size': 8})
     ax.text(category, q75, f'Q3\n{q75:.2f}', ha='center', va='center', fontdict={'size': 8})
-plt.title('Violin Plot: Sales by Category')
-plt.xticks(rotation=45)  
-quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
-fig = px.violin(df, x='Category', y='Sales', color='Category', title='Violin Plot: Sales by Category')
-for category in df['Category'].unique():
-    q25, q50, q75 = quartiles.loc[category]
+    plt.title('Violin Plot: Sales by Category')
+    plt.xticks(rotation=45)  
+    quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
+    fig = px.violin(df, x='Category', y='Sales', color='Category', title='Violin Plot: Sales by Category')
+    for category in df['Category'].unique():
+        q25, q50, q75 = quartiles.loc[category]
     fig.add_shape(type='line', x0=category, x1=category, y0=q25, y1=q75, line=dict(color='black', width=2))
-st.plotly_chart(fig)
+    st.plotly_chart(fig)
 
 
 top_customers = df.groupby('Customer Name')['Sales'].sum().sort_values(ascending=False).head(10)
 
 # Bar Plot: Top 10 Customers by Sales
-st.subheader('Top 10 Customers by Sales')
-plt.figure(figsize=(12, 6))
-sns.barplot(x=top_customers.index, y=top_customers.values, palette='viridis')
-plt.title('Top 10 Customers by Sales')
-plt.xticks(rotation=45) 
-fig_plotly = px.bar(x=top_customers.index, y=top_customers.values, color=top_customers.index, title='Top 10 Customers by Sales')
-st.plotly_chart(fig_plotly)
+with col2:
+    st.subheader('Top 10 Customers by Sales')
+    plt.figure(figsize=(12, 6))
+    sns.barplot(x=top_customers.index, y=top_customers.values, palette='viridis')
+    plt.title('Top 10 Customers by Sales')
+    plt.xticks(rotation=45) 
+    fig_plotly = px.bar(x=top_customers.index, y=top_customers.values, color=top_customers.index, title='Top 10 Customers by Sales')
+    st.plotly_chart(fig_plotly)
 
 
 # Display the top market
