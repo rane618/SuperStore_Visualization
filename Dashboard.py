@@ -251,10 +251,9 @@ with col1:
     ax.text(category, q25, f'Q1\n{q25:.2f}', ha='center', va='center', fontdict={'size': 8})
     ax.text(category, q50, f'Q2\n{q50:.2f}', ha='center', va='center', fontdict={'size': 8})
     ax.text(category, q75, f'Q3\n{q75:.2f}', ha='center', va='center', fontdict={'size': 8})
-    plt.title('Violin Plot: Sales by Category')
     plt.xticks(rotation=45)  
     quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
-    fig = px.violin(df, x='Category', y='Sales', color='Category', title='Violin Plot: Sales by Category')
+    fig = px.violin(df, x='Category', y='Sales', color='Category')
     for category in df['Category'].unique():
         q25, q50, q75 = quartiles.loc[category]
     fig.add_shape(type='line', x0=category, x1=category, y0=q25, y1=q75, line=dict(color='black', width=2))
@@ -268,9 +267,8 @@ with col2:
     st.subheader('Top 10 Customers by Sales')
     plt.figure(figsize=(12, 6))
     sns.barplot(x=top_customers.index, y=top_customers.values, palette='viridis')
-    plt.title('Top 10 Customers by Sales')
     plt.xticks(rotation=45) 
-    fig_plotly = px.bar(x=top_customers.index, y=top_customers.values, color=top_customers.index, title='Top 10 Customers by Sales')
+    fig_plotly = px.bar(x=top_customers.index, y=top_customers.values, color=top_customers.index)
     st.plotly_chart(fig_plotly)
 
 
