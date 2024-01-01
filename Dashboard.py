@@ -31,11 +31,6 @@ st.write(null_values_row_wise)
 col1, col2 = st.columns((2))
 df["Order Date"] = pd.to_datetime(df["Order Date"])
 
-# grouped barplots
-fig_grouped_bar = px.bar(df, x='Category', y='Sales', color='Region', barmode='group',
-                          title='Grouped Barplot: Sales by Category and Region')
-st.plotly_chart(fig_grouped_bar, use_container_width=True)
-
 st.sidebar.header("Choose your filter: ")
 # Create for Region
 region = st.sidebar.multiselect("Pick your Region", df["Region"].unique())
@@ -71,6 +66,11 @@ elif city:
     filtered_df = df3[df3["City"].isin(city)]
 else:
     filtered_df = df3[df3["Region"].isin(region) & df3["State"].isin(state) & df3["City"].isin(city)]
+    
+# grouped barplots
+fig_grouped_bar = px.bar(filtered_df, x='Category', y='Sales', color='Region', barmode='group',
+                          title='Grouped Barplot: Sales by Category and Region')
+st.plotly_chart(fig_grouped_bar, use_container_width=True)
 
 category_df = filtered_df.groupby(by = ["Category"], as_index = False)["Sales"].sum()
 
@@ -162,7 +162,7 @@ st.plotly_chart(data2,use_container_width=True)
 
 # Heatmap Analysis
 st.subheader(":fire: Heatmap Analysis")
-numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
+numeric_columns = filtered_df.select_dtypes(include=['float64', 'int64']).columns
 df_numeric = df[numeric_columns]
 corr = df_numeric.corr(method='pearson')
 fig, ax = plt.subplots(figsize=(8, 8))
@@ -172,7 +172,7 @@ st.pyplot(fig)
 
 
 # Top 10 products based on sales
-top_sales_products = df.groupby('Product Name')['Sales'].sum().nlargest(10).reset_index()
+top_sales_products = filtered_df.groupby('Product Name')['Sales'].sum().nlargest(10).reset_index()
 st.subheader("Top 10 Products Based on Sales")
 top_sales_products_sorted = top_sales_products.sort_values(by='Sales')
 fig, ax = plt.subplots()
@@ -188,7 +188,7 @@ st.plotly_chart(fig_plotly)
 # Create Box and Whisker Plot 
 with col1:
     st.subheader("Box and Whisker Plot: Market vs. Sales")
-    fig = px.box(df, x='Market', y='Sales', color='Market', title="Market vs. Sales",
+    fig = px.box(filtered_df, x='Market', y='Sales', color='Market', title="Market vs. Sales",
              labels={"Market": "Market", "Sales": "Sales"})
     fig.update_layout(
     xaxis=dict(title=dict(text="Market", font=dict(size=14))),
@@ -200,7 +200,7 @@ with col1:
 
 # Create Bubble Plot
 st.subheader(":chart_with_upwards_trend: Bubble Plot Analysis")
-bubble_data = df[['Sales', 'Profit', 'Quantity', 'Discount','Product Name']]
+bubble_data = filtered_df[['Sales', 'Profit', 'Quantity', 'Discount','Product Name']]
 fig_bubble = px.scatter(
     bubble_data,
     x='Sales',
@@ -219,7 +219,7 @@ st.plotly_chart(fig_bubble, use_container_width=True)
 
 
 # density plot
-fig_density = px.density_contour(df, x='Sales', y='Profit',
+fig_density = px.density_contour(filtered_df, x='Sales', y='Profit',
                                  title='Density Plot: Sales vs. Profit')
 st.plotly_chart(fig_density, use_container_width=True)
 fig = px.sunburst(df, path=['Region', 'Country', 'State', 'City'], values='Sales',
@@ -229,7 +229,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 #Map Plot
 with col2:
-    fig = px.choropleth(df, 
+    fig = px.choropleth(filtered_df, 
                     locations='Country',  # Column containing country names
                     locationmode='country names',  # Set the location mode
                     color='Sales',  # Column containing the color values
@@ -244,7 +244,7 @@ with col2:
 with col1:
     st.subheader('Violin Plot: Sales by Category')
     plt.figure(figsize=(10, 6))
-    ax = sns.violinplot(x='Category', y='Sales', data=df, palette='viridis')
+    ax = sns.violinplot(x='Category', y='Sales', data=filtered_df, palette='viridis')
     quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
     for category in df['Category'].unique():
         q25, q50, q75 = quartiles.loc[category]
@@ -260,7 +260,7 @@ with col1:
     st.plotly_chart(fig)
 
 
-top_customers = df.groupby('Customer Name')['Sales'].sum().sort_values(ascending=False).head(10)
+top_customers = filtered_df.groupby('Customer Name')['Sales'].sum().sort_values(ascending=False).head(10)
 
 # Bar Plot: Top 10 Customers by Sales
 with col2:
@@ -274,12 +274,12 @@ with col2:
 
 # Display the top market
 st.subheader("Top Market")
-top_market = df.groupby('Market')['Sales'].sum().idxmax()
+top_market = filtered_df.groupby('Market')['Sales'].sum().idxmax()
 st.write(top_market)
 
 # Display the top profit-making product
 st.subheader("Top Profit-Making Product")
-top_profit_product = df.groupby('Product Name')['Sales'].sum().idxmax()
+top_profit_product = filtered_df.groupby('Product Name')['Sales'].sum().idxmax()
 st.write(top_profit_product)
 
 with st.expander("View Data"):
