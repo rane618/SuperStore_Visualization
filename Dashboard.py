@@ -3,12 +3,9 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import pandas as pd
 import numpy as np
-import warnings
 import seaborn as sns
-warnings.filterwarnings('ignore')
 
 st.set_page_config(page_title="Superstore Visualization", page_icon=":bar_chart:",layout="wide")
-
 st.title(" :bar_chart:  SuperStore Visualization")
 st.markdown('<style>div.block-container{padding-top:1rem;}</style>',unsafe_allow_html=True)
 
@@ -33,8 +30,6 @@ st.write(null_values_row_wise)
 
 col1, col2 = st.columns((2))
 df["Order Date"] = pd.to_datetime(df["Order Date"])
-
-
 
 # grouped barplots
 fig_grouped_bar = px.bar(df, x='Category', y='Sales', color='Region', barmode='group',
@@ -68,7 +63,6 @@ else:
 city = st.sidebar.multiselect("Pick the City",df3["City"].unique())
 
 # Filter the data based on Region, State and City
-
 if not region and not state and not city:
     filtered_df = df
 elif not state and not city:
@@ -175,9 +169,7 @@ data2['layout'].update(title="Relationship between Sales and quantitys using Sca
 st.plotly_chart(data2,use_container_width=True)
 
 # Heatmap Analysis
-
 st.subheader(":fire: Heatmap Analysis")
-# Exclude non-numeric columns
 numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns
 df_numeric = df[numeric_columns]
 corr = df_numeric.corr(method='pearson')
@@ -185,6 +177,7 @@ fig, ax = plt.subplots(figsize=(8, 8))
 sns.heatmap(corr, annot=True, fmt='.2f', cbar=True, linewidth=0.5, ax=ax)
 ax.set_title("Heatmap Analysis")
 st.pyplot(fig)
+
 
 # Top 10 products based on sales
 top_sales_products = df.groupby('Product Name')['Sales'].sum().nlargest(10).reset_index()
@@ -199,14 +192,19 @@ st.plotly_chart(fig_plotly)
 
 
 
-# Box and Whisker Plot: Market vs. Sales
-st.subheader("Box and Whisker Plot: Market vs. Sales")
-plt.figure(figsize=(5, 5))
-sns.boxplot(x='Market', y='Sales', data=df, palette='rocket')
-plt.xlabel("Market", fontsize=6)
-plt.ylabel("Sales", fontsize=6)
 
-# Bubble Plot
+# Create Box and Whisker Plot 
+st.subheader("Box and Whisker Plot: Market vs. Sales")
+fig = px.box(df, x='Market', y='Sales', color='Market', title="Market vs. Sales",
+             labels={"Market": "Market", "Sales": "Sales"})
+fig.update_layout(
+    xaxis=dict(title=dict(text="Market", font=dict(size=14))),
+    yaxis=dict(title=dict(text="Sales", font=dict(size=14))),
+    font=dict(size=10)
+)
+st.plotly_chart(fig)
+
+# Create Bubble Plot
 st.subheader(":chart_with_upwards_trend: Bubble Plot Analysis")
 bubble_data = df[['Sales', 'Profit', 'Quantity', 'Discount','Product Name']]
 fig_bubble = px.scatter(
@@ -222,11 +220,7 @@ fig_bubble = px.scatter(
     width=800,
     height=600
 )
-
-# Update color scale for better visibility
 fig_bubble.update_traces(marker=dict(line=dict(width=1, color='white')))
-
-# Display the Bubble Plot in Streamlit
 st.plotly_chart(fig_bubble, use_container_width=True)
 
 
@@ -259,7 +253,6 @@ for category in df['Category'].unique():
     ax.text(category, q25, f'Q1\n{q25:.2f}', ha='center', va='center', fontdict={'size': 8})
     ax.text(category, q50, f'Q2\n{q50:.2f}', ha='center', va='center', fontdict={'size': 8})
     ax.text(category, q75, f'Q3\n{q75:.2f}', ha='center', va='center', fontdict={'size': 8})
-
 plt.title('Violin Plot: Sales by Category')
 plt.xticks(rotation=45)  
 quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
@@ -270,7 +263,6 @@ for category in df['Category'].unique():
 st.plotly_chart(fig)
 
 
-# Assuming df is your DataFrame with 'Customer Name' and 'Sales' columns
 top_customers = df.groupby('Customer Name')['Sales'].sum().sort_values(ascending=False).head(10)
 
 # Bar Plot: Top 10 Customers by Sales
@@ -278,7 +270,7 @@ st.subheader('Top 10 Customers by Sales')
 plt.figure(figsize=(12, 6))
 sns.barplot(x=top_customers.index, y=top_customers.values, palette='viridis')
 plt.title('Top 10 Customers by Sales')
-plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility
+plt.xticks(rotation=45) 
 fig_plotly = px.bar(x=top_customers.index, y=top_customers.values, color=top_customers.index, title='Top 10 Customers by Sales')
 st.plotly_chart(fig_plotly)
 
@@ -292,9 +284,6 @@ st.write(top_market)
 st.subheader("Top Profit-Making Product")
 top_profit_product = df.groupby('Product Name')['Sales'].sum().idxmax()
 st.write(top_profit_product)
-
-
-
 
 with st.expander("View Data"):
     st.write(filtered_df.iloc[:500,1:20:2].style.background_gradient(cmap="Oranges"))
