@@ -163,12 +163,34 @@ st.plotly_chart(data2,use_container_width=True)
 # Heatmap Analysis
 st.subheader(":fire: Heatmap Analysis")
 numeric_columns = filtered_df.select_dtypes(include=['float64', 'int64']).columns
-df_numeric = df[numeric_columns]
+df_numeric = filtered_df[numeric_columns]
 corr = df_numeric.corr(method='pearson')
-fig, ax = plt.subplots(figsize=(8, 8))
-sns.heatmap(corr, annot=True, fmt='.2f', cbar=True, linewidth=0.5, ax=ax)
-ax.set_title("Heatmap Analysis")
-st.pyplot(fig)
+# imshow function from plotly express can be used to create heatmaps in Python
+fig = px.imshow(corr,
+                labels=dict(x="Features", y="Features", color="Correlation"),
+                x=corr.columns,
+                y=corr.columns,
+                color_continuous_scale="RdBu_r",  
+                zmax=1, 
+                zmin=-1,  
+                width=800,
+                height=800)
+fig.update_layout(
+                  xaxis_showgrid=False,
+                  yaxis_showgrid=False)
+for i in range(len(corr.columns)):
+    for j in range(len(corr.columns)):
+        color = 'white' if abs(corr.iloc[i, j]) > 0.5 else 'black' 
+        fig.add_annotation(
+            text=f"{corr.iloc[i, j]:.2f}",
+            x=corr.columns[i],
+            y=corr.columns[j],
+            xref="x",
+            yref="y",
+            showarrow=False,
+            font=dict(size=14, color=color)  
+        )
+st.plotly_chart(fig)
 
 
 # Top 10 products based on sales
@@ -222,7 +244,9 @@ st.plotly_chart(fig_bubble, use_container_width=True)
 fig_density = px.density_contour(filtered_df, x='Sales', y='Profit',
                                  title='Density Plot: Sales vs. Profit')
 st.plotly_chart(fig_density, use_container_width=True)
-fig = px.sunburst(df, path=['Region', 'Country', 'State', 'City'], values='Sales',
+
+#Sunburst
+fig = px.sunburst(filtered_df, path=['Region', 'Country', 'State', 'City'], values='Sales',
                   title='Sunburst Chart: Sales by Region, Country, State, and City')
 fig.update_layout(margin=dict(l=0, r=0, b=0, t=40))
 st.plotly_chart(fig, use_container_width=True)
@@ -240,28 +264,22 @@ with col2:
     st.plotly_chart(fig, use_container_width=True)
 
 
-# Violin Plot: Sales by Category
 with col1:
     st.subheader('Violin Plot: Sales by Category')
-    plt.figure(figsize=(10, 6))
-    ax = sns.violinplot(x='Category', y='Sales', data=filtered_df, palette='viridis')
-    quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
-    for category in df['Category'].unique():
+    # Create a Plotly figure for Violin Plot
+    fig_plotly = px.violin(filtered_df, x='Category', y='Sales', color='Category')
+    
+    quartiles = filtered_df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
+    
+    for category in filtered_df['Category'].unique():
         q25, q50, q75 = quartiles.loc[category]
-    ax.text(category, q25, f'Q1\n{q25:.2f}', ha='center', va='center', fontdict={'size': 8})
-    ax.text(category, q50, f'Q2\n{q50:.2f}', ha='center', va='center', fontdict={'size': 8})
-    ax.text(category, q75, f'Q3\n{q75:.2f}', ha='center', va='center', fontdict={'size': 8})
-    plt.xticks(rotation=45)  
-    quartiles = df.groupby('Category')['Sales'].quantile([0.25, 0.5, 0.75]).unstack()
-    fig = px.violin(df, x='Category', y='Sales', color='Category')
-    for category in df['Category'].unique():
-        q25, q50, q75 = quartiles.loc[category]
-    fig.add_shape(type='line', x0=category, x1=category, y0=q25, y1=q75, line=dict(color='black', width=2))
-    st.plotly_chart(fig)
+        fig_plotly.add_shape(type='line', x0=category, x1=category, y0=q25, y1=q75, line=dict(color='black', width=2))
+    
+    # Display the Plotly figure using st.plotly_chart()
+    st.plotly_chart(fig_plotly)
 
 
 top_customers = filtered_df.groupby('Customer Name')['Sales'].sum().sort_values(ascending=False).head(10)
-
 # Bar Plot: Top 10 Customers by Sales
 with col2:
     st.subheader('Top 10 Customers by Sales')
