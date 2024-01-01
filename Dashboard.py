@@ -5,8 +5,8 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 
-st.set_page_config(page_title="Superstore Visualization", page_icon=":bar_chart:",layout="wide")
-st.title(" :bar_chart:  SuperStore Visualization")
+st.set_page_config(page_title="Superstore Visualization", page_icon=":chart_with_upwards_trend:",layout="wide")
+st.title(" :chart_with_upwards_trend:  SuperStore Visualization")
 st.markdown('<style>div.block-container{padding-top:1rem;}</style>',unsafe_allow_html=True)
 
 uploaded_file=st.sidebar.file_uploader("Choose a file")
