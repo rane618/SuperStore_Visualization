@@ -24,9 +24,9 @@ df['Postal Code'].fillna(np.random.randint(10000, 99999), inplace=True)
 null_values = df.isnull().sum()
 
 # Display null values row-wise
-null_values_row_wise = df[df.isnull().any(axis=1)]
-st.subheader("Rows with Null Values:")
-st.write(null_values_row_wise)
+# null_values_row_wise = df[df.isnull().any(axis=1)]
+# st.subheader("Rows with Null Values:")
+# st.write(null_values_row_wise)
 
 col1, col2 = st.columns((2))
 df["Order Date"] = pd.to_datetime(df["Order Date"])
@@ -105,11 +105,17 @@ with cl2:
         csv = region.to_csv(index = False).encode('utf-8')
         
         
-filtered_df["month_year"] = filtered_df["Order Date"].dt.to_period("M")
+filtered_df["month_year_str"] = filtered_df["Order Date"].dt.to_period("M")
+# Convert 'month_year' to strings for plotting
+filtered_df["month_year"] = filtered_df["month_year_str"].dt.strftime("%Y : %b")
+# Find the minimum month and set the order of months accordingly
+min_month = filtered_df["Order Date"].min().to_period("M")
+month_order = pd.period_range(start=min_month, periods=len(filtered_df["month_year_str"].unique()))
+# Ensure 'month_year' is of type 'str' and in the correct order
+filtered_df["month_year"] = pd.Categorical(filtered_df["month_year"], categories=month_order.strftime("%Y : %b"), ordered=True)
+linechart = pd.DataFrame(filtered_df.groupby("month_year")[["Sales", "Profit", "Shipping Cost"]].sum()).reset_index()
 st.subheader('TimeLine Analysis')
-
-linechart = pd.DataFrame(filtered_df.groupby(filtered_df["month_year"].dt.strftime("%Y : %b"))[["Sales", "Profit","Shipping Cost"]].sum()).reset_index()
-fig2 = px.line(linechart, x="month_year", y=["Sales", "Profit","Shipping Cost"], labels={"value": "Amount"}, height=500, width=1000, template="gridon")
+fig2 = px.line(linechart, x="month_year", y=["Sales", "Profit", "Shipping Cost"], labels={"value": "Amount"}, height=500, width=1000, template="gridon")
 st.plotly_chart(fig2, use_container_width=True)
 
 
@@ -136,14 +142,16 @@ with st.expander("Summary_Table"):
 
     filtered_df.iloc[2, 1] = np.nan  # Simulating a NaN value
 
-    st.markdown("Month wise Sub-Category Table")
-    filtered_df["month"] = filtered_df["Order Date"].dt.month_name()
-    sub_category_Year = pd.pivot_table(data=filtered_df, values="Sales", index=["Sub-Category"], columns="month")
+    # Assuming you already have 'filtered_df' DataFrame
 
+    st.markdown("Month wise Sub-Category Table")
+    filtered_df["month"] = filtered_df["Order Date"].dt.strftime("%B")
+    month_order = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+# Convert 'month' to a categorical type with the specified order
+    filtered_df["month"] = pd.Categorical(filtered_df["month"], categories=month_order, ordered=True)
+    sub_category_Year = pd.pivot_table(data=filtered_df, values="Sales", index=["Sub-Category"], columns="month", aggfunc='sum', fill_value=0)
 # Fill NaN values with 0 before applying the background gradient
     styled_df = sub_category_Year.fillna(0).style.background_gradient(cmap='rainbow_r')
-
-# Display the styled DataFrame
     st.write(styled_df)
 
 # Create a scatter plot
