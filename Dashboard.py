@@ -28,6 +28,9 @@ null_values = df.isnull().sum()
 # st.subheader("Rows with Null Values:")
 # st.write(null_values_row_wise)
 
+# Display the selected date range
+st.write("### Dataset Study from January 2012 to December 2015")
+
 col1, col2 = st.columns((2))
 df["Order Date"] = pd.to_datetime(df["Order Date"])
 
